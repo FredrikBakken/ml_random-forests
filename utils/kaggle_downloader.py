@@ -13,13 +13,10 @@ python kaggle_downloader.py -c <defined-competition> -a <kaggle-api-download> -e
 -e | Extract all zipped files? Must be integer: 0 = yes, 1 = no (default = 0 = yes)
 '''
 
-# TODO:
-# - Check if competition files have been downloaded already
-# - Extract competition files (.zip) and move the zipped files to "source_files" directory
-
 # Library imports
-from os import mkdir, chdir
+from os import mkdir, chdir, listdir
 from sys import exit
+from shutil import move
 from zipfile import ZipFile
 from os.path import exists
 from argparse import ArgumentParser
@@ -79,33 +76,62 @@ def setUpDirectories(competition=None, api=None):
 
 # Download the Kaggle competition files
 def downloadKaggleFiles(competition=None, api=None):
-    # Initialize download command
-    download_cmd = ''
+    # Check if directory for competition files is empty
+    if [f for f in listdir('.') if not f.startswith('.')] == []:
+        # Initialize download command
+        download_cmd = ''
 
-    # Specify the download command
-    if (competition != None):
-        download_cmd = competitions[competition]
-    elif (api != None):
-        download_cmd = api
-    
-    # Download Kaggle compeition files
-    proc = Popen(download_cmd, stdin = PIPE, stdout = PIPE)
-    stdout, stderr = proc.communicate(bytes(download_cmd, 'utf-8'))
+        # Specify the download command
+        if (competition != None):
+            download_cmd = competitions[competition]
+        elif (api != None):
+            download_cmd = api
+        
+        # Download Kaggle compeition files
+        proc = Popen(download_cmd, stdin = PIPE, stdout = PIPE)
+        stdout, stderr = proc.communicate(bytes(download_cmd, 'utf-8'))
 
-    # Check if user has joined the Kaggle competition
-    if ('403 - Forbidden' in str(stdout)):
-        exit("Before you can download the competition files from Kaggle, you need to 'Join Competition'.")
+        # Check if user has joined the Kaggle competition
+        if ('403 - Forbidden' in str(stdout)):
+            exit("Before you can download the competition files from Kaggle, you need to 'Join Competition'.")
 
-    # Print download output
-    print(stdout)
+        # Print download output
+        print(stdout)
 
-    # Executed without errors
-    return True
+        # Files downloaded successfully
+        return True
+    else:
+        # No files downloaded
+        return True # TODO: Set to False
 
 
 # Extract all the downloaded competition files
 def extractFiles(competition=None, api=None):
-    print('TODO')
+    # Initialize method variables
+    zip_files = []
+    backup_dir = 'source_files/'
+
+    # Check if there exists zip files that needs to be unzipped
+    if any(fname.endswith('.zip') for fname in listdir('.')):
+        # Create backup directory for original zip files
+        if (exists(backup_dir) == False):
+            mkdir(backup_dir)
+        
+        # Find all zip files in competition directory
+        for fname in listdir('.'):
+            if fname.endswith('.zip'):
+                zip_files.append(fname)
+        
+        # Unzip all zipped files
+        for zip_file in zip_files:
+            zip_ref = ZipFile(zip_file, 'r')
+            zip_ref.extractall('.')
+            zip_ref.close()
+
+            # Move file to zipped_source
+            move(zip_file, backup_dir + zip_file)
+    else:
+        print('No .zip files found.')
 
 
 # Main application functionalities
@@ -156,3 +182,6 @@ if __name__ == '__main__':
         main(competition=args.competition, api=args.api, extract=args.extract)
     else:
         exit('Your input arguments are invalid, please check your execution arguments.')
+    
+    # Execution completed
+    print('Application has stopped executing.')
