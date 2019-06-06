@@ -8,6 +8,7 @@ as possible, to work for "all" use cases.
 How to execute the script:
 python kaggle_downloader.py -c <defined-competition> -a <kaggle-api-download> -e <extract-all>
 
+Optional parameters:
 -c | Pre-defined competitions includes: 'bulldozers' and 'titanic'
 -a | Use the Kaggle API, e.g. 'kaggle competitions download -c <dataset-name>'
 -e | Extract all zipped files? Must be integer: 0 = yes, 1 = no (default = 0 = yes)
